@@ -26,7 +26,7 @@ public class JwtService implements CommandLineRunner {
     private  String secret;
 
     //this method will return brand-new token to us based on payload
-    private String createToken(Map<String,Object> payload,String email)
+    public String createToken(Map<String,Object> payload,String email)
     {
         Date now=new Date();
         Date expiryDate=new Date(now.getTime()+expiry*1000L);
@@ -40,48 +40,53 @@ public class JwtService implements CommandLineRunner {
                 ;
     }
 
-    private Claims extractAllPayLoad(String token)
+    public String createToken(String email)
+    {
+        return createToken(new HashMap<>(),email);
+    }
+
+    public Claims extractAllPayLoad(String token)
     {
 
 
         return Jwts.parser().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody();
     }
 
-    private <T>T extractClaim(String token,Function<Claims,T> claimsResolver)
+    public <T>T extractClaim(String token,Function<Claims,T> claimsResolver)
     {
         final Claims claims=extractAllPayLoad(token);
         return claimsResolver.apply(claims);
     }
 
-    private String extractEmail(String token)
+    public String extractEmail(String token)
     {
         return extractClaim(token,Claims::getSubject);
     }
 
-    private Date extractExpiration(String token)
+    public Date extractExpiration(String token)
     {
         return extractClaim(token, Claims::getExpiration);
     }
 
     //this method checks that the token expiry is before the current date or not
     //if true -->token expired
-    private Boolean isTokenExpired(String token)
+    public Boolean isTokenExpired(String token)
     {
        return extractExpiration(token).before(new Date());
     }
 
-    private Key getSignKey()
+    public Key getSignKey()
     {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    private Boolean validateToken(String token,String email)
+    public Boolean validateToken(String token,String email)
     {
         final String userEmailFetchedFromToken=extractEmail(token);
         return(userEmailFetchedFromToken.equals(email) && !isTokenExpired(token));
     }
 
-    private String extractPhoneNumber(String token)
+    public String extractPhoneNumber(String token)
     {
         Claims claim=extractAllPayLoad(token);
         String number= (String) claim.get("phoneNumber");
